@@ -2,7 +2,7 @@
 #include <string>
 using namespace std;
 
-////1.Struct
+////I.Struct
 
 //Hàm ngày core vlin vì đc dùng để lồn(g) date vào những thứ như mặt hàng, hoá đơn nhập xuất, etc.
 struct Ngay{
@@ -37,7 +37,7 @@ struct HoaDonNhap {
     string nhaCungCap;
     
     ChiTietHoaDon* danhSachNhap; 
-    int soLuongLoaiHang; 
+    int soLuongMatHang; 
     double tongTien;
 };
 
@@ -48,36 +48,143 @@ struct HoaDonXuat {
     string khachHang;
     
     ChiTietHoaDon* danhSachBan; 
-    int soLuongLoaiHang; 
+    int soLuongMatHang; 
     double tongTien;
 };
 
 //hiện tại logic khi nhập hàng là : lượng tồn + lượng trong hoá đơn, xuất hàng thì ngược lại (để đây case nghĩ ra đc cái logic nếu tính cả sl hàng tồn trong kho)
 
-////2.Hàm core
+////II.Hàm core
+
 //Cả 2 quá trình nhập & xuất hàng đều theo cấu trúc 1 hàm chính dùng để xử lí các tác vụ chung (hàm đầu) và các hàm sau dùng để support những yêu cầu 
 //cần thiết của quá trình đấy
 //Nói dễ hiểu thì *& là kiểu truyền tham chiếu đến một ptr, dạng kiểu vẫn save address dưới dạng ptr và vẫn có thể direct thay đổi đc những gì bên trong đấy
+
 //a.Nhập hàng
 
-void xuLyNhapHang(MatHang*& kho, int& nKho, HoaDonNhap*& dsHDN, int& sucChua);
+void xuLyNhapHang(MatHang*& kho, int& nKho, HoaDonNhap*& dsHDN, int& nHDN);
 void themMatHang(MatHang*& kho, int& n, int sucChua);
 
 //b.Xuất hàng
 
-void xuLyXuatHang(MatHang*& kho, int& nKho, HoaDonXuat*& dsHDX, int& sucChua);
+void xuLyXuatHang(MatHang*& kho, int& nKho, HoaDonXuat*& dsHDX, int& nHDX);
 
-//Hàm này cả quá trình a và b đều sẽ động vào
 
-void capNhatTonKho(MatHang*& kho, int& n, string maHang, int soLuongThayDoi);
+void capNhatTonKho(MatHang*& kho, int& n, string maHang, int soLuongThayDoi);           //Hàm này cả quá trình a và b đều sẽ động vào
 
 //c. Cảnh báo(Y.c nghiệp vụ)
 //const k để hàm này thay đổi dữ liệu
+
 void canhBaoHetHan(const MatHang* kho, int n, Ngay homNay);
 void canhBaoHetHang(const MatHang* kho, int n);
 void thongKeTonKho(const MatHang* kho, int n);
+
+//d.Misc shit, cái này tôi nhớ ông có nói là sẽ dùng như kiểu để đọc file trong kho lưu và lấy ra cái gì à? giờ tôi chưa bt nên làm gì nên chắc cứ để đây
+
+void docFile();
+void luuFile();
+
+//e.even more misc shit, nơi làm từ từ sẽ tìm thêm fuckton of workloads để doubledown bs mình cần làm và nhớ để khi hỏi k bị giãy đành đạch
+int timKiemMatHang(const MatHang* kho, int nKho, string maCanTim);
+
+
+
+//III. Main
+
+int main(){
+
+    //ném gì đó vào đây đi
+    return 0;
+}
+
+
+//IV.Viết lại funct
+
+//0.Cập nhật tồn kho viết lên đây
+
+//1.Le' mở bát
+//A.sub fuct
+
+int timKiemMatHang(const MatHang* kho, int nKho, string maCanTim){
+    for(int i = 0; i < nKho; i++){
+        if(kho[i].maHang == maCanTim) return i;         //found at i
+    }
+    return -1;                                          //not found
+}
+
+//B.main fuct
+
+void themMatHang(MatHang*& kho, int& n, int sucChua){}
+
+void xuLyNhapHang(MatHang*& kho, int& nKho, int& sucChuaKho, HoaDonNhap*& dsHDN, int& nHDN, int& sucChuaHDN) {
+    HoaDonNhap hdn;
+    //a. Nhập thông tin cơ bản cho hoá đơn nhập
+    cout << "Nhap ma hoa don nhap hang: "; cin >> hdn.maHDN;
+    cout << "Nhap ten nha cung cap: ";
+    cin.ignore(); getline(cin, hdn.nhaCungCap);
+    cout << "Nhap ngay hang duoc nhap ve (day -> month -> year): "; cin >> hdn.ngayNhap.ngay >> hdn.ngayNhap.thang >> hdn.ngayNhap.nam;
+
+    //b. Nhập chi tiết các đơn hàng:
+    cout << "Nhap so luong mat hang can nhap: ";
+    cin >> hdn.soLuongMatHang;
+
+    //Tạo mảng động cho cấc hàng trong hoá đơn:
+    hdn.danhSachNhap = new ChiTietHoaDon[hdn.soLuongMatHang];
+    hdn.tongTien = 0;
+
+    for (int i = 0; i < hdn.soLuongMatHang; i++) {
+        string maTemp;
+        cout << "Nhap ma hang thu " << i + 1 << ": ";
+        cin >> maTemp;
+
+        // Check xem id có trong kho chưa
+        int viTri = timKiemMatHang(kho, nKho, maTemp); 
+
+        if (viTri != -1) {                              // Case hàng còn tồn trong kho
+            int sl;
+            cout << "Hang da co trong kho. Nhap so luong nap them vao kho: "; cin >> sl;
+            
+            // Cập nhật tồn kho
+            capNhatTonKho(kho, nKho, maTemp, sl); 
+            
+            // Lưu vào chi tiết hóa đơn
+            hdn.danhSachNhap[i] = {maTemp, sl, kho[viTri].giaNhap};
+        } 
+        else {                                          // Case hàng mới 100%
+            cout << "Hang moi! Tien hanh them vao danh muc kho...\n";
+            
+            // Thêm hàng
+            themMatHang(kho, nKho, sucChuaKho);         //Kho++ sẽ dc thêm ở đây
+ 
+            int slNew;
+            cout << "Nhap so luong nap them vao kho: "; cin >> slNew;
+            
+            // Cập nhật số lượng cho mặt hàng vừa được thêm vào cuối mảng
+            kho[nKho - 1].soLuongTon = slNew;
+
+            //Lưu vào chi tiết hoá đơn
+            hdn.danhSachNhap[i] = {kho[nKho - 1].maHang, slNew, kho[nKho - 1].giaNhap};
+        }
+        hdn.tongTien += (hdn.danhSachNhap[i].soLuong * hdn.danhSachNhap[i].donGia);
+    }
+
+    //c.Lưu hoá đơn vào danh sách quản lý
+    if(nHDN >= sucChuaHDN){
+        int newSucChua = sucChuaHDN * 2 + 1;                // +1 xử lý trường hợp sức chứa = 0 
+        HoaDonNhap* temp = new HoaDonNhap[newSucChua];
+        for (int i = 0; i < nHDN; i++) temp[i] = dsHDN[i];
+        delete[] dsHDN;
+        dsHDN = temp;
+        sucChuaHDN = newSucChua;
+    }
+
+    dsHDN[nHDN++] = hdn;
+    cout << "Xu ly nhap hang thanh cong. Tong tien: " << hdn.tongTien << "\n";
+}
+
 
 
 //Sơ qua là như thế lày, somebody púsh ônêgàii
 
 //ai đó xử lý main, r 2 ng còn lại phân ra làm nhập/ xuất phần còn lại bổ sung gì thì lúc đấy lại phân ra làm/ bổ xung tiếp
+//Sau khi xong sẽ revise lại comment để chỉnh nó lên 1 chỗ thoáng hơn/ nhìn đỡ ngứa cái code
