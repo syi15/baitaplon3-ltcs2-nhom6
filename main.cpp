@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <iomanip>
+#include <ctime>    //idk
 using namespace std;
 
 ////I.Struct
@@ -77,22 +78,23 @@ void capNhatTonKho(MatHang*& kho, int& n, string maHang, int soLuongThayDoi);   
 //const k để hàm này thay đổi dữ liệu
 
 int tinhSoNgayConLai(Ngay hsd, Ngay homNay) {
-    tm time_hsd = {0};
+    tm time_hsd = {0};          //tm là kiểu dữ liệu có sẵn trong ctime chứa ngày giờ (mday mon year...)
     time_hsd.tm_mday = hsd.ngay;
-    time_hsd.tm_mon = hsd.thang - 1;
-    time_hsd.tm_year = hsd.nam - 1900;
+    time_hsd.tm_mon = hsd.thang - 1;        //Tháng bắt đầu từ 0 -> 11
+    time_hsd.tm_year = hsd.nam - 1900;      //Tương tự
 
     tm time_homNay = {0};
     time_homNay.tm_mday = homNay.ngay;
     time_homNay.tm_mon = homNay.thang - 1;
     time_homNay.tm_year = homNay.nam - 1900;
 
-    time_t t1 = mktime(&time_hsd);
-    time_t t2 = mktime(&time_homNay);
+    time_t t1 = mktime(&time_hsd);      //kiểu time_t lưu trữ tổng số giây tính từ 00:00:00 01/01/1970 (quy đổi thời gian thành giây hết để tính + -)
+    time_t t2 = mktime(&time_homNay);   //hàm mktime đổi cấu trúc mm/dd/yyyy thành time_t (nó còn tự sửa input 32/01 -> 01/02)
     
-    return difftime(t1, t2) / (60 * 60 * 24);
+    return difftime(t1, t2) / (60 * 60 * 24);       //difftime tính khoảng cách giữa t1 t2 chia 60s 60m 24h để ra số ngày
 }
 
+// Cảnh náo hết hạn
 void canhBaoHetHan(const MatHang* kho, int n, Ngay homNay) {
     cout << "\n\n";             // <==== Insert sub menu
     bool coHangSapHetHan = false;
@@ -113,6 +115,7 @@ void canhBaoHetHan(const MatHang* kho, int n, Ngay homNay) {
     if (coHangSapHetHan = false) cout << "Khong co mat hang nao sap het han\n";
 }
 
+// Cảnh báo hết hàng
 void canhBaoHetHang(const MatHang* kho, int n) {
     cout << "\n\n";             // <==== Insert sub menu
     bool coHangThieu = false;
@@ -128,7 +131,20 @@ void canhBaoHetHang(const MatHang* kho, int n) {
     if (coHangThieu= false) cout << "Cac ma hang deu dam bao so luong ton kho\n";
 }
 
-void thongKeTonKho(const MatHang* kho, int n);
+// Thống kê tồn kho
+void thongKeTonKho(const MatHang* kho, int n) {
+    cout << "\n\n";             // <==== Insert sub menu
+    double tongGiaTri = 0;
+
+    for (int i = 0; i < n; i++) {
+        double giaTri = kho[i].soLuongTon * kho[i].giaNhap;
+        tongGiaTri += giaTri;
+
+        cout << "Ma: " << kho[i].maHang << " | Ten: " << kho[i].tenHang << " | SL: " << kho[i].soLuongTon << " " << kho[i].donViTinh << " | Tong gia tri nhap: " << fixed << setprecision(0) << giaTri << "VND\n";
+    }
+
+    cout << "TONG GIA TRI KHO: " << fixed << setprecision(0) << tongGiaTri << "\n";
+}
 
 //d.Misc shit, cái này tôi nhớ ông có nói là sẽ dùng như kiểu để đọc file trong kho lưu và lấy ra cái gì à? giờ tôi chưa bt nên làm gì nên chắc cứ để đây
 
