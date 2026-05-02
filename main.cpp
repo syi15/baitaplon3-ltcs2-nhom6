@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <iomanip>
 using namespace std;
 
 ////I.Struct
@@ -75,8 +76,58 @@ void capNhatTonKho(MatHang*& kho, int& n, string maHang, int soLuongThayDoi);   
 //c. Cảnh báo(Y.c nghiệp vụ)
 //const k để hàm này thay đổi dữ liệu
 
-void canhBaoHetHan(const MatHang* kho, int n, Ngay homNay);
-void canhBaoHetHang(const MatHang* kho, int n);
+int tinhSoNgayConLai(Ngay hsd, Ngay homNay) {
+    tm time_hsd = {0};
+    time_hsd.tm_mday = hsd.ngay;
+    time_hsd.tm_mon = hsd.thang - 1;
+    time_hsd.tm_year = hsd.nam - 1900;
+
+    tm time_homNay = {0};
+    time_homNay.tm_mday = homNay.ngay;
+    time_homNay.tm_mon = homNay.thang - 1;
+    time_homNay.tm_year = homNay.nam - 1900;
+
+    time_t t1 = mktime(&time_hsd);
+    time_t t2 = mktime(&time_homNay);
+    
+    return difftime(t1, t2) / (60 * 60 * 24);
+}
+
+void canhBaoHetHan(const MatHang* kho, int n, Ngay homNay) {
+    cout << "\n\n";             // <==== Insert sub menu
+    bool coHangSapHetHan = false;
+
+    for (int i = 0; i < n; i++) {
+        int soNgayConLai = tinhSoNgayConLai(kho[i].hanSuDung, homNay);
+
+        if (soNgayConLai <=7) {
+            cout << "Ma: " << kho[i].maHang << " | Ten: " << kho[i].tenHang << " | HSD: " << kho[i].hanSuDung.ngay << "/" << kho[i].hanSuDung.thang << "/" << kho[i].hanSuDung.nam;
+
+            if (soNgayConLai < 0) cout << " | DA QUA HAN\n";
+            else cout << " | SAP HET HAN. Con " << soNgayConLai << " ngay\n";
+
+            coHangSapHetHan = true;
+        }
+    }
+
+    if (coHangSapHetHan = false) cout << "Khong co mat hang nao sap het han\n";
+}
+
+void canhBaoHetHang(const MatHang* kho, int n) {
+    cout << "\n\n";             // <==== Insert sub menu
+    bool coHangThieu = false;
+
+    for (int i = 0; i < n; i++) {
+        if (kho[i].soLuongTon < kho[i].mucTonToiThieu) {
+            cout << "Ma: " << kho[i].maHang  << " | Ten: " << kho[i].tenHang  << " | Ton kho: " << kho[i].soLuongTon << " " << kho[i].donViTinh << " | Duoi muc toi thieu " << kho[i].mucTonToiThieu << "\n";
+            
+            coHangThieu = true;
+        }
+    }
+
+    if (coHangThieu= false) cout << "Cac ma hang deu dam bao so luong ton kho\n";
+}
+
 void thongKeTonKho(const MatHang* kho, int n);
 
 //d.Misc shit, cái này tôi nhớ ông có nói là sẽ dùng như kiểu để đọc file trong kho lưu và lấy ra cái gì à? giờ tôi chưa bt nên làm gì nên chắc cứ để đây
