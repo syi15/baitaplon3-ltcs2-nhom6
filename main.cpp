@@ -96,7 +96,7 @@ int tinhSoNgayConLai(Ngay hsd, Ngay homNay) {
 
 // Cảnh náo hết hạn
 void canhBaoHetHan(const MatHang* kho, int n, Ngay homNay) {
-    cout << "\n\n";             // <==== Insert sub menu
+    cout << "\n\n";
     bool coHangSapHetHan = false;
 
     for (int i = 0; i < n; i++) {
@@ -117,7 +117,7 @@ void canhBaoHetHan(const MatHang* kho, int n, Ngay homNay) {
 
 // Cảnh báo hết hàng
 void canhBaoHetHang(const MatHang* kho, int n) {
-    cout << "\n\n";             // <==== Insert sub menu
+    cout << "\n\n";
     bool coHangThieu = false;
 
     for (int i = 0; i < n; i++) {
@@ -133,7 +133,7 @@ void canhBaoHetHang(const MatHang* kho, int n) {
 
 // Thống kê tồn kho
 void thongKeTonKho(const MatHang* kho, int n) {
-    cout << "\n\n";             // <==== Insert sub menu
+    cout << "\n\n";
     double tongGiaTri = 0;
 
     for (int i = 0; i < n; i++) {
