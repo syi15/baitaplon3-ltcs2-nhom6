@@ -23,6 +23,14 @@ struct MatHang {
     int mucTonToiThieu;
 };
 
+//Shibai
+struct NhaCungCap {
+    string tenNCC;
+    string soDienThoai;
+    string diaChi;
+    int diemUyTin;          // Đánh giá từ 1-5 sao
+};
+
 //Detail một mặt hàng trong hoá đơn, vd kiểu một hoá đơn nó có nhiều thứ thì trong đấy nó có list ra thêm 1 lone thứ khác ấy, b hiểu ý tôi k?
 struct ChiTietHoaDon {
     string maHang;
@@ -34,7 +42,7 @@ struct ChiTietHoaDon {
 struct HoaDonNhap {
     string maHDN;
     Ngay ngayNhap;
-    string nhaCungCap;
+    NhaCungCap ncc;
     
     ChiTietHoaDon* danhSachNhap; 
     int soLuongMatHang; 
@@ -67,24 +75,33 @@ void themMatHang(MatHang*& kho, int& nKho, int& sucChua, string newMaHang, Ngay 
 
 //b.Xuất hàng
 
-void xuLyXuatHang(MatHang*& kho, int& nKho, HoaDonXuat*& dsHDX, int& nHDX);
+void xuLyXuatHang(MatHang*& kho, int& nKho, int& sucChuaKho, HoaDonXuat*& dsHDX, int& nHDX, int& sucChuaHDX);
 
 
-void capNhatTonKho(MatHang*& kho, int& n, string maHang, Ngay hsd, int soLuongThayDoi);           //Hàm này cả quá trình a và b đều sẽ động vào
+void capNhatTonKho(MatHang*& kho, int& nKho, string maHang, Ngay hsd, int soLuongThayDoi);           //Hàm này cả quá trình a và b đều sẽ động vào
 
 //c. Cảnh báo(Y.c nghiệp vụ)
 //const k để hàm này thay đổi dữ liệu
 
-void canhBaoHetHan(const MatHang* kho, int n, Ngay homNay);
-void canhBaoHetHang(const MatHang* kho, int n);
-void thongKeTonKho(const MatHang* kho, int n);
+void canhBaoHetHan(const MatHang* kho, int nKho, Ngay homNay);
+void canhBaoHetHang(const MatHang* kho, int nKho);
+void thongKeTonKho(const MatHang* kho, int nKho);
 
-//d.Misc shit, cái này tôi nhớ ông có nói là sẽ dùng như kiểu để đọc file trong kho lưu và lấy ra cái gì à? giờ tôi chưa bt nên làm gì nên chắc cứ để đây
 
-void docFile();
-void luuFile();
+//d.Lưu & đọc các dữ liệu trong (kho, dshdn, dshdx)
 
-//e.even more misc shit, nơi làm từ từ sẽ tìm thêm fuckton of workloads để doubledown bs mình cần làm và nhớ để khi hỏi k bị giãy đành đạch
+void SaveData(const MatHang* kho, int nKho, const HoaDonNhap* dsHDN, int nHDN);
+void ReadData(MatHang*& kho, int& nKho, int& sucChuaKho);
+
+//e. Tính năng đặc biệt
+
+// Báo cáo thông minh
+void thongKeBanChay();
+
+// Tối ưu kho
+void deXuatViTri();
+
+//f.even more misc shit, nơi làm từ từ sẽ tìm thêm fuckton of workloads để doubledown bs mình cần làm và nhớ để khi hỏi k bị giãy đành đạch
 bool checkNgay(Ngay d1, Ngay d2);
 int timKiemMatHang(const MatHang* kho, int nKho, string maCanTim, Ngay hsd);
 
@@ -117,17 +134,17 @@ bool checkNgay(Ngay d1, Ngay d2) {
     return (d1.ngay == d2.ngay && d1.thang == d2.thang && d1.nam == d2.nam);
 }
 
-int timKiemMatHang(const MatHang* kho, int nKho, string maCanTim, Ngay hsd){
+int timKiemMatHang(const MatHang* kho, int nKho, string maHangCanTim, Ngay hsd){
     for(int i = 0; i < nKho; i++){
-        if(kho[i].maHang == maCanTim && checkNgay(kho[i].hanSuDung, hsd)) return i;         //found
+        if(kho[i].maHang == maHangCanTim && checkNgay(kho[i].hanSuDung, hsd)) return i;         //found
     }
     return -1;                                          //not found
 }
 
 //B.main fuct
 
-void capNhatTonKho(MatHang*& kho, int& n, string maHang, Ngay hsd, int soLuongThayDoi){
-    int viTri = timKiemMatHang(kho, n, maHang, hsd);
+void capNhatTonKho(MatHang*& kho, int& nKho, string maHang, Ngay hsd, int soLuongThayDoi){
+    int viTri = timKiemMatHang(kho, nKho, maHang, hsd);
     if (viTri != -1){
         kho[viTri].soLuongTon += soLuongThayDoi;                //Vì dùng cho cả nhập/xuất nên + - được
     }
@@ -166,7 +183,11 @@ void xuLyNhapHang(MatHang*& kho, int& nKho, int& sucChuaKho, HoaDonNhap*& dsHDN,
     //a. Nhập thông tin cơ bản cho hoá đơn nhập
     cout << "Nhap ma hoa don nhap hang: "; cin >> hdn.maHDN;
     cout << "Nhap ten nha cung cap: ";
-    cin.ignore(); getline(cin, hdn.nhaCungCap);
+    cin.ignore(); getline(cin, hdn.ncc.tenNCC);
+    cout << "Nhap sdt nha cung cap: "; getline(cin, hdn.ncc.soDienThoai);
+    cout << "Nhap dia chi nha cung cap: "; getline(cin, hdn.ncc.diaChi);
+    cout << "Nhap diem uy tin cua nha cung cap (1 - 5): "; cin >> hdn.ncc.diemUyTin;
+
     cout << "Nhap ngay hang duoc nhap ve (ngay -> thang -> nam): "; cin >> hdn.ngayNhap.ngay >> hdn.ngayNhap.thang >> hdn.ngayNhap.nam;
 
     //b. Nhập chi tiết các đơn hàng:
@@ -281,7 +302,7 @@ void xuLyXuatHang(MatHang*& kho, int& nKho, int& sucChuaKho, HoaDonXuat*& dsHDX,
                  << " - Ton: " << kho[vt].soLuongTon << " (" << kho[vt].donViTinh << ")\n";
         }
 
-        int choice; cout << "Lua chon: "; cin >> choice;
+        int choice;
         do {
             cout << "Chon STT lo hang muon xuat (1-" << soLoThucTe << "): ";
             cin >> choice;
@@ -302,7 +323,8 @@ void xuLyXuatHang(MatHang*& kho, int& nKho, int& sucChuaKho, HoaDonXuat*& dsHDX,
             hdx.danhSachBan[i] = {maCanTim, sl, kho[vtThucTe].giaBan};
             hdx.tongTien += (sl * hdx.danhSachBan[i].donGia);
             cout << "Xac nhan ban " << sl << " " << kho[vtThucTe].donViTinh << ".\n";
-        } else {
+        } 
+        else {
             cout << "Loi: Khong du hang.\n"; i--;
         }
 
@@ -340,12 +362,12 @@ int tinhSoNgayConLai(Ngay hsd, Ngay homNay) {
     return difftime(t1, t2) / (60 * 60 * 24);       //difftime tính khoảng cách giữa t1 t2 chia 60s 60m 24h để ra số ngày
 }
 
-// Cảnh náo hết hạn
-void canhBaoHetHan(const MatHang* kho, int n, Ngay homNay) {
+// Cảnh báo hết hạn
+void canhBaoHetHan(const MatHang* kho, int nKho, Ngay homNay) {
     cout << "\n\n";
     bool coHangSapHetHan = false;
 
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < nKho; i++) {
         int soNgayConLai = tinhSoNgayConLai(kho[i].hanSuDung, homNay);
 
         if (soNgayConLai <=7) {
@@ -358,15 +380,15 @@ void canhBaoHetHan(const MatHang* kho, int n, Ngay homNay) {
         }
     }
 
-    if (coHangSapHetHan = false) cout << "Khong co mat hang nao sap het han\n";
+    if (!coHangSapHetHan) cout << "Khong co mat hang nao sap het han\n";
 }
 
 // Cảnh báo hết hàng
-void canhBaoHetHang(const MatHang* kho, int n) {
+void canhBaoHetHang(const MatHang* kho, int nKho) {
     cout << "\n\n";
     bool coHangThieu = false;
 
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < nKho; i++) {
         if (kho[i].soLuongTon < kho[i].mucTonToiThieu) {
             cout << "Ma: " << kho[i].maHang  << " | Ten: " << kho[i].tenHang  << " | Ton kho: " << kho[i].soLuongTon << " " << kho[i].donViTinh << " | Duoi muc toi thieu " << kho[i].mucTonToiThieu << "\n";
             
@@ -374,15 +396,15 @@ void canhBaoHetHang(const MatHang* kho, int n) {
         }
     }
 
-    if (coHangThieu= false) cout << "Cac ma hang deu dam bao so luong ton kho\n";
+    if (coHangThieu == false) cout << "Cac ma hang deu dam bao so luong ton kho\n";
 }
 
 // Thống kê tồn kho
-void thongKeTonKho(const MatHang* kho, int n) {
-    cout << "\n\n";             // <==== Insert sub menu
+void thongKeTonKho(const MatHang* kho, int nKho) {
+    cout << "\n\n";
     double tongGiaTri = 0;
 
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < nKho; i++) {
         double giaTri = kho[i].soLuongTon * kho[i].giaNhap;
         tongGiaTri += giaTri;
 
