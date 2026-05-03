@@ -273,7 +273,7 @@ void xuLyXuatHang(MatHang*& kho, int& nKho, int& sucChuaKho, HoaDonXuat*& dsHDX,
             if (kho[j].maHang == maCanTim && kho[j].soLuongTon > 0) dsViTriDong[chiSo++] = j;
         }
 
-        // BƯỚC 3: HIỂN THỊ MENU CHO KHÁCH CHỌN[cite: 3]
+        // Hiển thị menu chọn lô
         cout << "Tim thay " << soLoThucTe << " lo hang. Chon STT:\n";
         for (int j = 0; j < soLoThucTe; j++) {
             int vt = dsViTriDong[j];
@@ -291,11 +291,11 @@ void xuLyXuatHang(MatHang*& kho, int& nKho, int& sucChuaKho, HoaDonXuat*& dsHDX,
             }
         } while (choice < 1 || choice > soLoThucTe);
 
-        int vtThucTe = dsViTriDong[choice - 1]; // Vị trí "xịn" trong kho[cite: 3]
+        int vtThucTe = dsViTriDong[choice - 1]; // Vị trí thật trong kho (do array lấy -1)
         int sl; cout << "Nhap so luong mua: "; cin >> sl;
 
         if (kho[vtThucTe].soLuongTon >= sl) {
-            // BƯỚC 4: SỬ DỤNG HÀM CORE ĐỂ ĐỒNG BỘ
+
             // Truyền dấu trừ để hàm hiểu là xuất hàng
             capNhatTonKho(kho, nKho, maCanTim, kho[vtThucTe].hanSuDung, -sl); 
 
@@ -306,7 +306,6 @@ void xuLyXuatHang(MatHang*& kho, int& nKho, int& sucChuaKho, HoaDonXuat*& dsHDX,
             cout << "Loi: Khong du hang.\n"; i--;
         }
 
-        // BƯỚC 5: XÓA MẢNG ĐỘNG TẠM THỜI NGAY LẬP TỨC[cite: 3]
         delete[] dsViTriDong;
     }
 
