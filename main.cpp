@@ -2,6 +2,7 @@
 #include <string>
 #include <iomanip>
 #include <ctime>    //idk
+#include <fstream>   //doc, ghi file    
 using namespace std;
 
 ////I.Struct
@@ -96,17 +97,45 @@ void ReadData(MatHang*& kho, int& nKho, int& sucChuaKho);
 //e. Tính năng đặc biệt
 
 // Báo cáo thông minh
-void thongKeBanChay();
+void thongKeBanChay(const MatHang* kho, int nKho, const HoaDonXuat* dsHDX, int nHDX){
+    cout << "\n === Phan tich xu huong ban hang ===\n";
+    if (nHDX == 0) {
+        cout << "Chua co hoa don xuat nao de thong ke.\n";
+        return;
+    }
+    // 1. Tìm mặt hàng bán chạy nhất
+    string maHangBanChay;
+    int maxSoLuongBan = 0;
+    for (int i = 0; i < nHDX; i++) {
+        for (int j = 0; j < dsHDX[i].soLuongMatHang; j++) {
+            if (dsHDX[i].danhSachBan[j].soLuong > maxSoLuongBan) {
+                maxSoLuongBan = dsHDX[i].danhSachBan[j].soLuong;
+                maHangBanChay = dsHDX[i].danhSachBan[j].maHang;
+            }
+        }
+    }
+    if (tongSoLuongBan > maxSoLuongBan) {
+        cout << "Mat hang ban chay nhat: " << maHangBanChay << " | So luong da ban: " << maxSoLuongBan << "\n";
+        cout << "Du doan xu huong: " << maHangBanChay << " van se tiep tuc ban chay, nen du tru them mat hang nay.\n";  
+    } else {
+        cout << "Khong co mat hang nao duoc ban.\n";
+    }
+}
+
+// Quản lý nhà cung cấp
+void quanLyNhaCungCap();
 
 // Tối ưu kho
 void deXuatViTri();
+
+
 
 //f.even more misc shit, nơi làm từ từ sẽ tìm thêm fuckton of workloads để doubledown bs mình cần làm và nhớ để khi hỏi k bị giãy đành đạch
 bool checkNgay(Ngay d1, Ngay d2);
 int timKiemMatHang(const MatHang* kho, int nKho, string maCanTim, Ngay hsd);
 
 //todo:
-//+list các mặt hàng (chăc dùng cái đọc file à?)
+//+list các mặt hàng (chăc dùng cái đọc file à?) (ừ)
 //+Báo cáo thông minh
 //+Quản lý nhà cung cấp
 //+Tối ưu kho
@@ -117,8 +146,94 @@ int timKiemMatHang(const MatHang* kho, int nKho, string maCanTim, Ngay hsd);
 //III. Main
 
 int main(){
+// 1.Khởi tạo kho
+    MatHang* kho = nullptr;
+    int nKho = 0;
+    int sucChuaKho = 0;
 
-    //ném gì đó vào đây đi
+// 2.Khởi tạo danh sách hoá đơn nhập
+    HoaDonNhap* dsHDN = nullptr;
+    int nHDN = 0;
+    int sucChuaHDN = 0;
+
+// 3.Khởi tạo danh sách hoá đơn xuất
+    HoaDonXuat* dsHDX = nullptr;
+    int nHDX = 0;
+    int sucChuaHDX = 0;
+
+    // "Thực đơn"(china system) chọn chức năng cho ứng dụng
+    int choice;
+    do{
+        cout << "UNG DUNG QUAN LY KHO SIEU THI" << endl;
+        cout << "1. Nhap hang vao kho\n"; // xuất hoá đơn nhập
+        cout << "2. Xuat hang ra kho\n"; // xuất hoá đơn xuất
+        cout << "3. Kiem tra mat hang sap het han"; // So sánh ngày hiện tại với HSD, cảnh báo trước 7 ngày, nếu hết hạn sẽ báo hết hạn
+        cout << "4. Kiem tra mat hang sap het hang\n"; // So sánh số lượng tồn với mức tồn tối thiểu, nếu dưới sẽ báo thiếu hàng
+        cout << "5. Thong ke ton kho\n"; 
+        cout << "6. Luu du lieu\n"; // sẽ lưu dữ liệu vào file để lần sau mở ra vẫn còn hàng đã nhập, tránh tình trạng tắt chương trình là mất dữ liệu
+        cout << "7. Doc du lieu\n"; // đọc dữ liệu từ file đã lưu vào để tiếp tục quản lý
+        cout << "0. Thoat\n";
+        cout << "======================================\n";
+        cout << "Nhap lua chon: "; cin >> choice;
+
+    switch (choice){
+        case 1: {
+            cout << "\n===Nhap hang vao kho===\n";
+            xuLyNhapHang(kho, nKho, sucChuaKho, dsHDN, nHDN, sucChuaHDN);
+            break;
+        }
+        case 2: {
+            cout << "\n===Xuat hang ra kho===\n";
+            xuLyXuatHang(kho, nKho, sucChuaKho, dsHDX, nHDX, sucChuaHDX);
+            break;
+        }
+        case 3: {
+            cout << "\n===Kiem tra mat hang sap het han===\n";
+            Ngay homNay;
+            cout << "Nhap ngay hien tai (ngay -> thang -> nam): "; cin >> homNay.ngay >> homNay.thang >> homNay.nam; // lấy ngày cứng để kiểm tra, muốn realtime có thể dùng ctime
+            canhBaoHetHan(kho, nKho, homNay);
+            break;
+        }
+        case 4: {
+            cout << "\n===Kiem tra mat hang sap het hang===\n";
+            canhBaoHetHang(kho, nKho);
+            break;
+        }
+        case 5: {
+            cout << "\n===Thong ke ton kho===\n";
+            if (nKho == 0) 
+                cout << "Kho dang trong, khong co mat hang nao de thong ke.\n"; // nếu kho trống thì báo không có mặt hàng
+            else
+                thongKeTonKho(kho, nKho);
+            break;
+        }
+        case 6: {
+            cout << "\n===Luu du lieu===\n";
+            SaveData(kho, nKho, dsHDN, nHDN);
+            break;
+        }
+        case 7: {
+            cout << "\n===Doc du lieu===\n";
+            ReadData(kho, nKho, sucChuaKho);
+            break;
+        }
+        case 0: {
+            cout << "Tat ung dung, tam biet.!\n";
+            break;
+        }
+        default: {
+            cout << "Lua chon khong hop le, vui long chon lai!\n";
+            break;
+        }
+    }
+ } while (choice != 0);
+ // 4': Giải phóng bộ nhớ đã cấp phát động
+    delete[] kho;
+    for (int i = 0; i < nHDN; i++) delete[] dsHDN[i].danhSachNhap;
+    delete[] dsHDN;
+    for (int i = 0; i < nHDX; i++) delete[] dsHDX[i].danhSachBan;
+    delete[] dsHDX;
+
     return 0;
 }
 
