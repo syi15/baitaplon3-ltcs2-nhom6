@@ -84,6 +84,7 @@ void capNhatTonKho(MatHang*& kho, int& nKho, string maHang, Ngay hsd, int soLuon
 //c. Cảnh báo(Y.c nghiệp vụ)
 //const k để hàm này thay đổi dữ liệu
 
+int tinhSoNgayConLai(Ngay hsd, Ngay homNay);
 void canhBaoHetHan(const MatHang* kho, int nKho, Ngay homNay);
 void canhBaoHetHang(const MatHang* kho, int nKho);
 void thongKeTonKho(const MatHang* kho, int nKho);
@@ -91,8 +92,8 @@ void thongKeTonKho(const MatHang* kho, int nKho);
 
 //d.Lưu & đọc các dữ liệu trong (kho, dshdn, dshdx)
 
-void SaveData(const MatHang* kho, int nKho, const HoaDonNhap* dsHDN, int nHDN);
-void ReadData(MatHang*& kho, int& nKho, int& sucChuaKho);
+void SaveData(const MatHang* kho, int nKho, const HoaDonNhap* dsHDN, int nHDN, const HoaDonXuat* dsHDX, int nHDX);
+void ReadData(MatHang*& kho, int& nKho, int& sucChuaKho, HoaDonNhap*& dsHDN, int& nHDN, int& sucChuaHDN, HoaDonXuat*& dsHDX, int& nHDX, int& sucChuaHDX);
 
 //e. Tính năng đặc biệt
 
@@ -107,8 +108,6 @@ bool checkNgay(Ngay d1, Ngay d2);
 int timKiemMatHang(const MatHang* kho, int nKho, string maHangCanTim, Ngay hsd);
 
 //todo:
-//+list các mặt hàng (chăc dùng cái đọc file à?)
-//+Báo cáo thông minh
 //+Quản lý nhà cung cấp
 //+Tối ưu kho
 //+Main
@@ -500,7 +499,7 @@ void thongKeTonKho(const MatHang* kho, int nKho) {
     cout << "TONG GIA TRI KHO: " << fixed << setprecision(0) << tongGiaTri << "\n";
 }
 
-void SaveData(const MatHang* kho, int nKho, const HoaDonNhap* dsHDN, int nHDN){
+void SaveData(const MatHang* kho, int nKho, const HoaDonNhap* dsHDN, int nHDN, const HoaDonXuat* dsHDX, int nHDX){
     ofstream f("Kho_va_HoaDon.txt");
     if (!f.is_open()){
         cout << "Loi! Khong the tao/mo file.\n";
@@ -535,12 +534,26 @@ void SaveData(const MatHang* kho, int nKho, const HoaDonNhap* dsHDN, int nHDN){
         f << dsHDN[i].tongTien << "\n";
     }
 
+    //Lưu thông tin hoá đơn xuất
+    f << nHDX << "\n";
+    for (int i = 0; i < nHDX; i++){
+        f << dsHDX[i].maHDX << "\n";
+        f << dsHDX[i].ngayXuat.ngay << " " << dsHDX[i].ngayXuat.thang << " " << dsHDX[i].ngayXuat.nam << "\n";
+        f << dsHDX[i].khachHang <<"\n";
+
+        f << dsHDX[i].soLuongMatHang << "\n";
+        for (int j = 0; j < dsHDX[i].soLuongMatHang; j++){
+            f << dsHDX[i].danhSachBan[j].maHang << " " << dsHDX[i].danhSachBan[i].soLuong << " " << dsHDX[i].danhSachBan[i].donGia << "\n";
+        }
+        f << dsHDX[i].tongTien << "\n";
+    }
+
     f.close();                  //Close the text file
     cout << "Da ghi file thanh cong.\n";
 }
 
 
-void ReadData(MatHang*& kho, int& nKho, int& sucChuaKho){
+void ReadData(MatHang*& kho, int& nKho, int& sucChuaKho, HoaDonNhap*& dsHDN, int& nHDN, int& sucChuaHDN, HoaDonXuat*& dsHDX, int& nHDX, int& sucChuaHDX)    {
     fstream f ("Kho_va_HoaDon.txt");
     if(!f.is_open()){
         cout << "Loi! Khong the mo file.\n";
@@ -561,35 +574,108 @@ void ReadData(MatHang*& kho, int& nKho, int& sucChuaKho){
         f >> kho[i].mucTonToiThieu;
     }
 
+    f >> nHDN;
+    sucChuaHDN = nHDN + 10;
+    dsHDN = new HoaDonNhap[sucChuaHDN];
+
+    for(int i = 0; i < nHDN; i++){
+        f >> dsHDN[i].maHDN;
+        f >> dsHDN[i].ngayNhap.ngay >> dsHDN[i].ngayNhap.thang >> dsHDN[i].ngayNhap.nam;
+        f.ignore();
+        getline(f, dsHDN[i].ncc.tenNCC);
+        getline(f, dsHDN[i].ncc.soDienThoai);
+        getline(f, dsHDN[i].ncc.diaChi);
+        f >> dsHDN[i].ncc.diemUyTin;
+
+        f >> dsHDN[i].soLuongMatHang;
+        dsHDN[i].danhSachNhap = new ChiTietHoaDon[dsHDN[i].soLuongMatHang];
+        for (int j = 0; j < dsHDN[i].soLuongMatHang; j++) {
+            f >> dsHDN[i].danhSachNhap[j].maHang >> dsHDN[i].danhSachNhap[j].soLuong >> dsHDN[i].danhSachNhap[j].donGia;
+        }
+        f >> dsHDN[i].tongTien;
+    }
+
+    f >> nHDX;
+    sucChuaHDX = nHDX + 10;
+    dsHDX = new HoaDonXuat[sucChuaHDX];
+
+    for (int i = 0; i < nHDX; i++){
+        f >> dsHDX[i].maHDX;
+        f >> dsHDX[i].ngayXuat.ngay >> dsHDX[i].ngayXuat.thang >> dsHDX[i].ngayXuat.nam;
+        f.ignore();
+        getline(f, dsHDX[i].khachHang);
+
+        f >> dsHDX[i].soLuongMatHang;
+        dsHDX[i].danhSachBan = new ChiTietHoaDon[dsHDX[i].soLuongMatHang];
+        for (int j = 0; j < dsHDX[i].soLuongMatHang; j++){
+            f >> dsHDX[i].danhSachBan[j].maHang >> dsHDX[i].danhSachBan[j].soLuong >> dsHDX[i].danhSachBan[j].donGia;
+        }
+        f >> dsHDX[i].tongTien;
+    }
+
     f.close();
     cout << "Da doc file thanh cong!\n";
 }
 
-
-// Cần xem lại!!!!!!!!!!!!!!!!
+// Chưa check logic
 void thongKeBanChay(const MatHang* kho, int nKho, const HoaDonXuat* dsHDX, int nHDX){
     cout << "\n === Phan tich xu huong ban hang ===\n";
     if (nHDX == 0) {
         cout << "Chua co hoa don xuat nao de thong ke.\n";
         return;
     }
-    // 1. Tìm mặt hàng bán chạy nhất
-    string maHangBanChay;
-    int maxSoLuongBan = 0;
+    
+    // Đếm tổng số chi tiết hàng bán
+    int tongChiTiet = 0;
+    for (int i = 0; i < nHDX; i++) {
+        tongChiTiet += dsHDX[i].soLuongMatHang;
+    }
+    
+    // Cấp phát mảng động
+    string* dsMaHang = new string[tongChiTiet];
+    int* dsTongSoLuong = new int[tongChiTiet];
+    int soLoaiHang = 0;
+    
+    // Duyệt qua tất cả hoá đơn xuất, tính tổng số lượng bán mỗi loại hàng
     for (int i = 0; i < nHDX; i++) {
         for (int j = 0; j < dsHDX[i].soLuongMatHang; j++) {
-            if (dsHDX[i].danhSachBan[j].soLuong > maxSoLuongBan) {
-                maxSoLuongBan = dsHDX[i].danhSachBan[j].soLuong;
-                maHangBanChay = dsHDX[i].danhSachBan[j].maHang;
+            string maHang = dsHDX[i].danhSachBan[j].maHang;
+            int soLuong = dsHDX[i].danhSachBan[j].soLuong;
+            
+            // Kiểm tra xem mã hàng này đã tồn tại chưa
+            bool found = false;
+            for (int k = 0; k < soLoaiHang; k++) {
+                if (dsMaHang[k] == maHang) {
+                    dsTongSoLuong[k] += soLuong;
+                    found = true;
+                    break;
+                }
+            }
+            
+            // Nếu chưa có thì thêm vào
+            if (!found) {
+                dsMaHang[soLoaiHang] = maHang;
+                dsTongSoLuong[soLoaiHang] = soLuong;
+                soLoaiHang++;
             }
         }
     }
-    if (tongSoLuongBan > maxSoLuongBan) {
-        cout << "Mat hang ban chay nhat: " << maHangBanChay << " | So luong da ban: " << maxSoLuongBan << "\n";
-        cout << "Du doan xu huong: " << maHangBanChay << " van se tiep tuc ban chay, nen du tru them mat hang nay.\n";  
-    } else {
-        cout << "Khong co mat hang nao duoc ban.\n";
+    
+    // Tìm mặt hàng bán chạy nhất
+    string maHangBanChay = dsMaHang[0];
+    int maxSoLuongBan = dsTongSoLuong[0];
+    for (int i = 1; i < soLoaiHang; i++) {
+        if (dsTongSoLuong[i] > maxSoLuongBan) {
+            maxSoLuongBan = dsTongSoLuong[i];
+            maHangBanChay = dsMaHang[i];
+        }
     }
+    
+    cout << "Mat hang ban chay nhat: " << maHangBanChay << " | Tong so luong da ban: " << maxSoLuongBan << "\n";
+    cout << "Du doan xu huong: " << maHangBanChay << " van se tiep tuc ban chay, nen du tru them mat hang nay.\n";
+    
+    delete[] dsMaHang;
+    delete[] dsTongSoLuong;
 }
 
 
