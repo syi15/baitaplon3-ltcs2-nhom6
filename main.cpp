@@ -29,6 +29,7 @@ struct NhaCungCap {
     string tenNCC;
     string soDienThoai;
     string diaChi;
+    int diemChatLuong;         // Đánh giá từ 1-5 sao
     int diemUyTin;          // Đánh giá từ 1-5 sao
 };
 
@@ -59,6 +60,12 @@ struct HoaDonXuat {
     ChiTietHoaDon* danhSachBan; 
     int soLuongMatHang; 
     double tongTien;
+};
+
+//Struct helper cho baoCaoThongMinh, chủ yếu dùng để tính tần suất
+struct DoanhSoMatHang {
+    string maHang;
+    int soLuongBan;
 };
 
 //hiện tại logic khi nhập hàng là : lượng tồn + lượng trong hoá đơn, xuất hàng thì ngược lại (để đây case nghĩ ra đc cái logic nếu tính cả sl hàng tồn trong kho)
@@ -98,10 +105,10 @@ void ReadData(MatHang*& kho, int& nKho, int& sucChuaKho, HoaDonNhap*& dsHDN, int
 //e. Tính năng đặc biệt
 
 // Báo cáo thông minh
-void thongKeBanChay(const MatHang* kho, int nKho, const HoaDonXuat* dsHDX, int nHDX);
+void baoCaoThongMinh(const MatHang* kho, int nKho, const HoaDonXuat* dsHDX, int nHDX);
 
 // Tối ưu kho
-void deXuatViTri();
+void toiUuKho(const MatHang* kho, int nKho, const HoaDonXuat* dsHDX, int nHDX);
 
 //f.even more misc shit, nơi làm từ từ sẽ tìm thêm fuckton of workloads để doubledown bs mình cần làm và nhớ để khi hỏi k bị giãy đành đạch
 bool checkNgay(Ngay d1, Ngay d2);
@@ -109,7 +116,6 @@ int timKiemMatHang(const MatHang* kho, int nKho, string maHangCanTim, Ngay hsd);
 
 //todo:
 //+Quản lý nhà cung cấp
-//+Tối ưu kho
 //+Main
 
 
@@ -180,12 +186,12 @@ int main(){
         }
         case 6: {
             cout << "\n===Luu du lieu===\n";
-            SaveData(kho, nKho, dsHDN, nHDN);
+            SaveData(kho, nKho, dsHDN, nHDN, dsHDX, nHDX);
             break;
         }
         case 7: {
             cout << "\n===Doc du lieu===\n";
-            ReadData(kho, nKho, sucChuaKho);
+            ReadData(kho, nKho, sucChuaKho, dsHDN, nHDN, sucChuaHDN, dsHDX, nHDX, sucChuaHDX);
             break;
         }
         case 0: {
@@ -271,6 +277,7 @@ void xuLyNhapHang(MatHang*& kho, int& nKho, int& sucChuaKho, HoaDonNhap*& dsHDN,
     cin.ignore(); getline(cin, hdn.ncc.tenNCC);
     cout << "Nhap sdt nha cung cap: "; getline(cin, hdn.ncc.soDienThoai);
     cout << "Nhap dia chi nha cung cap: "; getline(cin, hdn.ncc.diaChi);
+    cout << "Nhap diem chat luong cua nha cung cap (1 - 5): "; cin >> hdn.ncc.diemChatLuong;
     cout << "Nhap diem uy tin cua nha cung cap (1 - 5): "; cin >> hdn.ncc.diemUyTin;
 
     cout << "Nhap ngay hang duoc nhap ve (ngay -> thang -> nam): "; cin >> hdn.ngayNhap.ngay >> hdn.ngayNhap.thang >> hdn.ngayNhap.nam;
@@ -525,6 +532,7 @@ void SaveData(const MatHang* kho, int nKho, const HoaDonNhap* dsHDN, int nHDN, c
         f << dsHDN[i].ncc.tenNCC << "\n"; // Theo Level 2 bạn mới nâng cấp
         f << dsHDN[i].ncc.soDienThoai << "\n";
         f << dsHDN[i].ncc.diaChi << "\n";
+        f << dsHDN[i].ncc.diemChatLuong << "\n";
         f << dsHDN[i].ncc.diemUyTin << "\n";
         
         f << dsHDN[i].soLuongMatHang << "\n";
@@ -543,7 +551,7 @@ void SaveData(const MatHang* kho, int nKho, const HoaDonNhap* dsHDN, int nHDN, c
 
         f << dsHDX[i].soLuongMatHang << "\n";
         for (int j = 0; j < dsHDX[i].soLuongMatHang; j++){
-            f << dsHDX[i].danhSachBan[j].maHang << " " << dsHDX[i].danhSachBan[i].soLuong << " " << dsHDX[i].danhSachBan[i].donGia << "\n";
+            f << dsHDX[i].danhSachBan[j].maHang << " " << dsHDX[i].danhSachBan[j].soLuong << " " << dsHDX[i].danhSachBan[j].donGia << "\n";
         }
         f << dsHDX[i].tongTien << "\n";
     }
@@ -585,6 +593,7 @@ void ReadData(MatHang*& kho, int& nKho, int& sucChuaKho, HoaDonNhap*& dsHDN, int
         getline(f, dsHDN[i].ncc.tenNCC);
         getline(f, dsHDN[i].ncc.soDienThoai);
         getline(f, dsHDN[i].ncc.diaChi);
+        f >> dsHDN[i].ncc.diemChatLuong;
         f >> dsHDN[i].ncc.diemUyTin;
 
         f >> dsHDN[i].soLuongMatHang;
@@ -618,7 +627,7 @@ void ReadData(MatHang*& kho, int& nKho, int& sucChuaKho, HoaDonNhap*& dsHDN, int
 }
 
 // Chưa check logic
-void thongKeBanChay(const MatHang* kho, int nKho, const HoaDonXuat* dsHDX, int nHDX){
+void baoCaoThongMinh(const MatHang* kho, int nKho, const HoaDonXuat* dsHDX, int nHDX){
     cout << "\n === Phan tich xu huong ban hang ===\n";
     if (nHDX == 0) {
         cout << "Chua co hoa don xuat nao de thong ke.\n";
@@ -662,22 +671,88 @@ void thongKeBanChay(const MatHang* kho, int nKho, const HoaDonXuat* dsHDX, int n
     }
     
     // Tìm mặt hàng bán chạy nhất
-    string maHangBanChay = dsMaHang[0];
-    int maxSoLuongBan = dsTongSoLuong[0];
-    for (int i = 1; i < soLoaiHang; i++) {
-        if (dsTongSoLuong[i] > maxSoLuongBan) {
-            maxSoLuongBan = dsTongSoLuong[i];
-            maHangBanChay = dsMaHang[i];
+    if (soLoaiHang > 0){
+        string maHangBanChay = dsMaHang[0];
+        int maxSoLuongBan = dsTongSoLuong[0];
+        for (int i = 1; i < soLoaiHang; i++) {
+            if (dsTongSoLuong[i] > maxSoLuongBan) {
+                maxSoLuongBan = dsTongSoLuong[i];
+                maHangBanChay = dsMaHang[i];
+            }
         }
+    
+        cout << "Mat hang ban chay nhat: " << maHangBanChay << " | Tong so luong da ban: " << maxSoLuongBan << "\n";
+        cout << "Du doan xu huong: " << maHangBanChay << " van se tiep tuc ban chay, nen du tru them mat hang nay.\n";
     }
     
-    cout << "Mat hang ban chay nhat: " << maHangBanChay << " | Tong so luong da ban: " << maxSoLuongBan << "\n";
-    cout << "Du doan xu huong: " << maHangBanChay << " van se tiep tuc ban chay, nen du tru them mat hang nay.\n";
+    else{
+        cout << "Khong co mat hang nao duoc ban.\n";
+    }
     
     delete[] dsMaHang;
     delete[] dsTongSoLuong;
 }
 
+void toiUuKho(const MatHang* kho, int nKho, const HoaDonXuat* dsHDX, int nHDX){
+    if (nHDX == 0) {
+        cout << "Chua co du lieu ban hang de toi uu kho.\n";
+        return;
+    }
+
+    //Lấy danh sách các mã hàng duy nhất trong kho
+    DoanhSoMatHang* dsDoanhSo = new DoanhSoMatHang[nKho];
+    int soLoaiHang = 0;
+
+    for (int i = 0; i < nKho; i++) {
+        // Kiểm tra xem mã này đã có trong dsDoanhSo chưa
+        bool tonTai = false;
+        for (int j = 0; j < soLoaiHang; j++) {
+            if (dsDoanhSo[j].maHang == kho[i].maHang) {
+                tonTai = true; break;
+            }
+        }
+        
+        if (!tonTai) {
+            dsDoanhSo[soLoaiHang].maHang = kho[i].maHang;
+            dsDoanhSo[soLoaiHang].soLuongBan = 0;
+            
+            // Tính tổng số lượng đã bán của mã này từ dsHDX[cite: 3]
+            for (int h = 0; h < nHDX; h++) {
+                for (int k = 0; k < dsHDX[h].soLuongMatHang; k++) {
+                    if (dsHDX[h].danhSachBan[k].maHang == kho[i].maHang) {
+                        dsDoanhSo[soLoaiHang].soLuongBan += dsHDX[h].danhSachBan[k].soLuong;
+                    }
+                }
+            }
+            soLoaiHang++;
+        }
+    }
+
+    //Sắp xếp ds theo số lượng bán giảm dần
+    for (int i = 0; i < soLoaiHang - 1; i++) {
+        for (int j = 0; j < soLoaiHang - i - 1; j++) {
+            if (dsDoanhSo[j].soLuongBan < dsDoanhSo[j + 1].soLuongBan) {
+                DoanhSoMatHang temp = dsDoanhSo[j];
+                dsDoanhSo[j] = dsDoanhSo[j + 1];
+                dsDoanhSo[j + 1] = temp;
+            }
+        }
+    }
+
+    // Hiển thị danh sách mặt hàng theo thứ tự doanh số
+    cout << "\n=== Danh sach mat hang theo doanh so ===\n";
+    cout << left << setw(15) << "Ma Hang" << setw(15) << "Tong Ban" << "Vi Tri De Xuat\n";
+    for (int i = 0; i < soLoaiHang; i++) {
+        string viTri;
+        if (i < 3) viTri = "KHU VUC A (Gan cua)";
+        else if (i < 7) viTri = "KHU VUC B (Giua kho)";
+        else viTri = "KHU VUC C (Cuoi kho)";
+        
+        cout << left << setw(15) << dsDoanhSo[i].maHang << setw(15) << dsDoanhSo[i].soLuongBan << viTri << "\n";
+    }
+
+    delete[] dsDoanhSo;
+}
 
 //Sơ qua là như thế lày, somebody púsh ônêgàii
 
