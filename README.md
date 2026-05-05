@@ -1,2 +1,2 @@
-# baitaplon3-ltcs2-nhom6-nemchua
-BIG BAI TAP CUA NHOM 6
+# baitaplon6-ltcs2-nhom3
+BIG BAI TAP CUA NHOM 3
