@@ -684,7 +684,7 @@ void baoCaoThongMinh(const MatHang* kho, int nKho, const HoaDonXuat* dsHDX, int 
         cout << "Mat hang ban chay nhat: " << maHangBanChay << " | Tong so luong da ban: " << maxSoLuongBan << "\n";
         cout << "Du doan xu huong: " << maHangBanChay << " van se tiep tuc ban chay, nen du tru them mat hang nay.\n";
     }
-    
+
     else{
         cout << "Khong co mat hang nao duoc ban.\n";
     }
@@ -740,6 +740,7 @@ void toiUuKho(const MatHang* kho, int nKho, const HoaDonXuat* dsHDX, int nHDX){
     }
 
     // Hiển thị danh sách mặt hàng theo thứ tự doanh số
+    //setw(n) căn chỉnh khoảng trắng sau n ký tự, left căn lề trái.
     cout << "\n=== Danh sach mat hang theo doanh so ===\n";
     cout << left << setw(15) << "Ma Hang" << setw(15) << "Tong Ban" << "Vi Tri De Xuat\n";
     for (int i = 0; i < soLoaiHang; i++) {
