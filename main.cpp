@@ -137,7 +137,7 @@ int main(){
         cout << "3. Kiem tra mat hang sap het han\n";
         cout << "4. Kiem tra mat hang sap het hang\n";
         cout << "5. Thong ke ton kho\n";
-        cout << "6. Bao cau xu huong thi truong\n";
+        cout << "6. Bao cao xu huong thi truong\n";
         cout << "7. Toi uu kho\n";
         cout << "8. Luu du lieu\n";
         cout << "9. Doc du lieu\n";
@@ -191,10 +191,34 @@ int main(){
             break;
         }
         case 9: {
-            cout << "\n===Doc du lieu===\n";
-            ReadData(kho, nKho, sucChuaKho, dsHDN, nHDN, sucChuaHDN, dsHDX, nHDX, sucChuaHDX);
+            char confirm;
+            bool valid = false;
+            cout << "\n=== DOC DU LIEU TU FILE ===\n";
+            cout << "CANH BAO: Thao tac nay se xoa sach cac thay doi CHUA LUU tren RAM.\n";
+
+            // Vòng lặp cưỡng ép: Không cho thoát ra nếu không gõ đúng y hoặc n
+            while (!valid) {
+                cout << "Ban co chac chan muon tiep tuc? (y/n): ";
+                cin >> confirm;
+                confirm = tolower(confirm); // Chấp nhận cả Y và y, N và n
+
+                if (confirm == 'y' || confirm == 'n') {
+                    valid = true; // Thoát vòng lặp
+                } else {
+                    // Nếu gõ ký tự khác, thông báo và yêu cầu gõ lại
+                    cout << "Ky tu khong hop le! Chi chap nhan 'y' hoac 'n'.\n";
+                }
+            }
+
+            if (confirm == 'y') {
+                ReadData(kho, nKho, sucChuaKho, dsHDN, nHDN, sucChuaHDN, dsHDX, nHDX, sucChuaHDX);
+            } 
+            else {
+                cout << "Da huy thao tac. Du lieu hien tai van duoc giu nguyen.\n";
+            }
             break;
         }
+
         case 0: {
             cout << "Dang thoat ung dung...\n";
             break;
@@ -709,6 +733,26 @@ void ReadData(MatHang*& kho, int& nKho, int& sucChuaKho, HoaDonNhap*& dsHDN, int
     if(!f.is_open()){
         cout << "Loi! Khong the mo file.\n";
         return;
+    }
+
+
+    // Trước khi đọc dữ liệu mới, giải phóng bộ nhớ cũ nếu đã có
+    // Dữ liệu được xoá theo thứ tự kho -> hoá đơn nhập -> hoá đơn xuất để tránh lỗi truy cập bộ nhớ
+    if (kho != nullptr) {
+        delete[] kho;
+        kho = nullptr;
+    }
+
+    if (dsHDN != nullptr) {
+        for (int i = 0; i < nHDN; i++) delete[] dsHDN[i].danhSachNhap;
+        delete[] dsHDN;
+        dsHDN = nullptr;
+    }
+
+    if (dsHDX != nullptr) {
+        for (int i = 0; i < nHDX; i++) delete[] dsHDX[i].danhSachBan;
+        delete[] dsHDX;
+        dsHDX = nullptr;
     }
     
     f >> nKho;
