@@ -97,10 +97,10 @@ void baoCaoThongMinh(const MatHang* kho, int nKho, const HoaDonXuat* dsHDX, int 
 // Tối ưu sắp xếp kho dựa trên doanh số bán hàng
 void toiUuKho(const MatHang* kho, int nKho, const HoaDonXuat* dsHDX, int nHDX);
 
-// E. LƯU & ĐỌC DỮ LIỆU TỪ FILE
+// E. LƯU & ĐỌC DỮ LIỆU TỪ FILE - các hàm này chủ yếu sẽ được dùng trong quá trình nhập tồn kho, nhập/xuất hàng và chỉ tồn tại ở menu dưới dạng fallback.
 
-void SaveData(const MatHang* kho, int nKho, const HoaDonNhap* dsHDN, int nHDN, const HoaDonXuat* dsHDX, int nHDX);
-void ReadData(MatHang*& kho, int& nKho, int& sucChuaKho, HoaDonNhap*& dsHDN, int& nHDN, int& sucChuaHDN, HoaDonXuat*& dsHDX, int& nHDX, int& sucChuaHDX);
+void SaveData(const MatHang* kho, int nKho, const HoaDonNhap* dsHDN, int nHDN, const HoaDonXuat* dsHDX, int nHDX, bool isSilent = false);
+void ReadData(MatHang*& kho, int& nKho, int& sucChuaKho, HoaDonNhap*& dsHDN, int& nHDN, int& sucChuaHDN, HoaDonXuat*& dsHDX, int& nHDX, int& sucChuaHDX, bool isSilent = false);
 
 // F. CÁC HÀM HỖ TRỢ TIỆN ÍCH
 void capNhatTonKho(MatHang*& kho, int& nKho, string maHang, Ngay hsd, int soLuongThayDoi);           // Cập nhật tồn kho cho cả nhập và xuất
@@ -126,109 +126,114 @@ int main(){
     int nHDX = 0;
     int sucChuaHDX = 0;
 
-    // Menu vòng lặp - người dùng chọn chức năng
+//Tự đọc lại data khi menu được khởi chạy
+    ReadData(kho, nKho, sucChuaKho, dsHDN, nHDN, sucChuaHDN, dsHDX, nHDX, sucChuaHDX, true);
+
+// Menu vòng lặp - người dùng chọn chức năng
     int choice;
-    do{
-        cout << "\n======================================\n";
-        cout << "   UNG DUNG QUAN LY KHO SIEU THI\n";
-        cout << "======================================\n";
-        cout << "1. Nhap hang vao kho\n";
-        cout << "2. Xuat hang ra kho\n";
-        cout << "3. Kiem tra mat hang sap het han\n";
-        cout << "4. Kiem tra mat hang sap het hang\n";
-        cout << "5. Thong ke ton kho\n";
-        cout << "6. Bao cao xu huong thi truong\n";
-        cout << "7. Toi uu kho\n";
-        cout << "8. Luu du lieu\n";
-        cout << "9. Doc du lieu\n";
-        cout << "0. Thoat\n";
-        cout << "======================================\n";
-        cout << "Nhap lua chon: "; cin >> choice;
+        do{
+            cout << "\n======================================\n";
+            cout << "   UNG DUNG QUAN LY KHO SIEU THI\n";
+            cout << "======================================\n";
+            cout << "1. Nhap hang vao kho\n";
+            cout << "2. Xuat hang ra kho\n";
+            cout << "3. Kiem tra mat hang sap het han\n";
+            cout << "4. Kiem tra mat hang sap het hang\n";
+            cout << "5. Thong ke ton kho\n";
+            cout << "6. Bao cao xu huong thi truong\n";
+            cout << "7. Toi uu kho\n";
+            cout << "8. Luu du lieu\n";
+            cout << "9. Doc du lieu\n";
+            cout << "0. Thoat\n";
+            cout << "======================================\n";
+            cout << "Nhap lua chon: "; cin >> choice;
 
-    switch (choice){
-        case 1: {
-            cout << "\n===Nhap hang vao kho===\n";
-            xuLyNhapHang(kho, nKho, sucChuaKho, dsHDN, nHDN, sucChuaHDN);
-            break;
-        }
-        case 2: {
-            cout << "\n===Xuat hang ra kho===\n";
-            xuLyXuatHang(kho, nKho, sucChuaKho, dsHDX, nHDX, sucChuaHDX);
-            break;
-        }
-        case 3: {
-            cout << "\n===Kiem tra mat hang sap het han===\n";
-            Ngay homNay;
-            cout << "Nhap ngay hien tai (ngay -> thang -> nam): "; cin >> homNay.ngay >> homNay.thang >> homNay.nam; // lấy ngày cứng trước khi kiểm tra
-            canhBaoHetHan(kho, nKho, homNay);
-            break;
-        }
-        case 4: {
-            cout << "\n===Kiem tra mat hang sap het hang===\n";
-            canhBaoHetHang(kho, nKho);
-            break;
-        }
-        case 5: {
-            cout << "\n===Thong ke ton kho===\n";
-            if (nKho == 0) 
-                cout << "Kho dang trong, khong co mat hang nao de thong ke.\n";
-            else thongKeTonKho(kho, nKho);
-            break;
-        }
-        case 6: {
-            cout << "\n===Bao cao thong minh===\n";
-            baoCaoThongMinh(kho, nKho, dsHDX, nHDX);
-            break;
-        }
-        case 7: {
-            cout << "\n===Toi uu kho===\n";
-            toiUuKho(kho, nKho, dsHDX, nHDX);
-            break;
-        }
-        case 8: {
-            cout << "\n===Luu du lieu===\n";
-            SaveData(kho, nKho, dsHDN, nHDN, dsHDX, nHDX);
-            break;
-        }
-        case 9: {
-            char confirm;
-            bool valid = false;
-            cout << "\n=== DOC DU LIEU TU FILE ===\n";
-            cout << "CANH BAO: Thao tac nay se xoa sach cac thay doi CHUA LUU tren RAM.\n";
+        switch (choice){
+            case 1: {
+                cout << "\n===Nhap hang vao kho===\n";
+                xuLyNhapHang(kho, nKho, sucChuaKho, dsHDN, nHDN, sucChuaHDN);
+                SaveData(kho, nKho, dsHDN, nHDN, dsHDX, nHDX, true);
+                break;
+            }
+            case 2: {
+                cout << "\n===Xuat hang ra kho===\n";
+                xuLyXuatHang(kho, nKho, sucChuaKho, dsHDX, nHDX, sucChuaHDX);
+                SaveData(kho, nKho, dsHDN, nHDN, dsHDX, nHDX, true);
+                break;
+            }
+            case 3: {
+                cout << "\n===Kiem tra mat hang sap het han===\n";
+                Ngay homNay;
+                cout << "Nhap ngay hien tai (ngay -> thang -> nam): "; cin >> homNay.ngay >> homNay.thang >> homNay.nam; // lấy ngày cứng trước khi kiểm tra
+                canhBaoHetHan(kho, nKho, homNay);
+                break;
+            }
+            case 4: {
+                cout << "\n===Kiem tra mat hang sap het hang===\n";
+                canhBaoHetHang(kho, nKho);
+                break;
+            }
+            case 5: {
+                cout << "\n===Thong ke ton kho===\n";
+                if (nKho == 0) 
+                    cout << "Kho dang trong, khong co mat hang nao de thong ke.\n";
+                else thongKeTonKho(kho, nKho);
+                break;
+            }
+            case 6: {
+                cout << "\n===Bao cao thong minh===\n";
+                baoCaoThongMinh(kho, nKho, dsHDX, nHDX);
+                break;
+            }
+            case 7: {
+                cout << "\n===Toi uu kho===\n";
+                toiUuKho(kho, nKho, dsHDX, nHDX);
+                break;
+            }
+            case 8: {
+                cout << "\n===Luu du lieu===\n";
+                SaveData(kho, nKho, dsHDN, nHDN, dsHDX, nHDX, false);
+                break;
+            }
+            case 9: {
+                char confirm;
+                bool valid = false;
+                cout << "\n=== DOC DU LIEU TU FILE ===\n";
+                cout << "CANH BAO: Thao tac nay se xoa sach cac thay doi chua duoc luu tru tren he thong.\n";
 
-            // Vòng lặp cưỡng ép: Không cho thoát ra nếu không gõ đúng y hoặc n
-            while (!valid) {
-                cout << "Ban co chac chan muon tiep tuc? (y/n): ";
-                cin >> confirm;
-                confirm = tolower(confirm); // Chấp nhận cả Y và y, N và n
+                // Vòng lặp cưỡng ép: Không cho thoát ra nếu không gõ đúng y hoặc n
+                while (!valid) {
+                    cout << "Ban co chac chan muon tiep tuc? (y/n): ";
+                    cin >> confirm;
+                    confirm = tolower(confirm); // Chấp nhận cả Y và y, N và n
 
-                if (confirm == 'y' || confirm == 'n') {
-                    valid = true; // Thoát vòng lặp
-                } else {
-                    // Nếu gõ ký tự khác, thông báo và yêu cầu gõ lại
-                    cout << "Ky tu khong hop le! Chi chap nhan 'y' hoac 'n'.\n";
+                    if (confirm == 'y' || confirm == 'n') {
+                        valid = true; // Thoát vòng lặp
+                    } else {
+                        // Nếu gõ ký tự khác, thông báo và yêu cầu gõ lại
+                        cout << "Ky tu khong hop le! Chi chap nhan 'y' hoac 'n'.\n";
+                    }
                 }
+
+                if (confirm == 'y') {
+                    ReadData(kho, nKho, sucChuaKho, dsHDN, nHDN, sucChuaHDN, dsHDX, nHDX, sucChuaHDX, false);
+                } 
+                else {
+                    cout << "Da huy thao tac. Du lieu hien tai van duoc giu nguyen.\n";
+                }
+                break;
             }
 
-            if (confirm == 'y') {
-                ReadData(kho, nKho, sucChuaKho, dsHDN, nHDN, sucChuaHDN, dsHDX, nHDX, sucChuaHDX);
-            } 
-            else {
-                cout << "Da huy thao tac. Du lieu hien tai van duoc giu nguyen.\n";
+            case 0: {
+                cout << "Dang thoat ung dung...\n";
+                break;
             }
-            break;
+            default: {
+                cout << "Lua chon khong hop le, vui long chon lai!\n";
+                break;
+            }
         }
-
-        case 0: {
-            cout << "Dang thoat ung dung...\n";
-            break;
-        }
-        default: {
-            cout << "Lua chon khong hop le, vui long chon lai!\n";
-            break;
-        }
-    }
- } while (choice != 0);
+    } while (choice != 0);
  // 4. Giải phóng bộ nhớ đã cấp phát động
     delete[] kho;
     for (int i = 0; i < nHDN; i++) delete[] dsHDN[i].danhSachNhap;
@@ -536,12 +541,10 @@ void thongKeTonKho(const MatHang* kho, int nKho) {
         double giaTri = kho[i].soLuongTon * kho[i].giaNhap;
         tongGiaTri += giaTri;
 
-        cout << "Ma: " << kho[i].maHang << " | Ten: " << kho[i].tenHang << " | SL: " << kho[i].soLuongTon << " " << kho[i].donViTinh << " | Tong gia tri nhap: " << fixed << setprecision(0) << giaTri << "VND\n";
+        cout << "Ma: " << kho[i].maHang << " | Ten: " << kho[i].tenHang << " | SL: " << kho[i].soLuongTon << " " << kho[i].donViTinh << " | Tong gia tri nhap: " << giaTri << "VND\n";
     }
 
-    cout << "TONG GIA TRI KHO: " << fixed << setprecision(0) << tongGiaTri << "\n";
-
-    cout << defaultfloat;                       // Bỏ setprecision
+    cout << "TONG GIA TRI KHO: " << tongGiaTri << "\n";
 }
 
 // Phân tích xu hướng bán hàng: xác định sản phẩm bán chạy nhất
@@ -673,67 +676,85 @@ void toiUuKho(const MatHang* kho, int nKho, const HoaDonXuat* dsHDX, int nHDX){
     delete[] dsDoanhSo;
 }
 
-void SaveData(const MatHang* kho, int nKho, const HoaDonNhap* dsHDN, int nHDN, const HoaDonXuat* dsHDX, int nHDX){
-    ofstream f("Kho_va_HoaDon.txt");
-    if (!f.is_open()){
-        cout << "Loi! Khong the tao/mo file.\n";
-        return;
-    }
-
+void SaveData(const MatHang* kho, int nKho, const HoaDonNhap* dsHDN, int nHDN, const HoaDonXuat* dsHDX, int nHDX, bool isSilent = false){
     //Lưu thông tin kho hàng
-    f << nKho << "\n";
-    for (int i = 0; i < nKho; i++){
-        f << kho[i].maHang << "\n";
-        f << kho[i].tenHang << "\n";
-        f << kho[i].donViTinh << "\n";
-        f << kho[i].giaNhap << " " << kho[i].giaBan << " " << kho[i].soLuongTon << "\n";
-        f << kho[i].hanSuDung.ngay << " " << kho[i].hanSuDung.thang << " " << kho[i].hanSuDung.nam << "\n";
-        f << kho[i].mucTonToiThieu << "\n";
+    ofstream fKho("Kho.txt");
+
+    if (fKho.is_open()) {
+        fKho << nKho << "\n";
+        for (int i = 0; i < nKho; i++){
+            fKho << kho[i].maHang << "\n";
+            fKho << kho[i].tenHang << "\n";
+            fKho << kho[i].donViTinh << "\n";
+            fKho << kho[i].giaNhap << " " << kho[i].giaBan << " " << kho[i].soLuongTon << "\n";
+            fKho << kho[i].hanSuDung.ngay << " " << kho[i].hanSuDung.thang << " " << kho[i].hanSuDung.nam << "\n";
+            fKho << kho[i].mucTonToiThieu << "\n";
+        }
+
+        fKho.close();
+    }
+    else if (!isSilent) {
+        cout << "Loi! Khong the tao/mo file kho.\n";
     }
 
     //Lưu thông tin hoá đơn nhập
-    f << nHDN << "\n";
-    for (int i = 0; i < nHDN; i++) {
-        f << dsHDN[i].maHDN << "\n";
-        f << dsHDN[i].ngayNhap.ngay << " " << dsHDN[i].ngayNhap.thang << " " << dsHDN[i].ngayNhap.nam << "\n";
-        f << dsHDN[i].ncc.tenNCC << "\n"; // Theo Level 2 bạn mới nâng cấp
-        f << dsHDN[i].ncc.soDienThoai << "\n";
-        f << dsHDN[i].ncc.diaChi << "\n";
-        f << dsHDN[i].ncc.diemChatLuong << "\n";
-        f << dsHDN[i].ncc.diemUyTin << "\n";
-        
-        f << dsHDN[i].soLuongMatHang << "\n";
-        for (int j = 0; j < dsHDN[i].soLuongMatHang; j++) {
-            f << dsHDN[i].danhSachNhap[j].maHang << " " << dsHDN[i].danhSachNhap[j].soLuong << " " << dsHDN[i].danhSachNhap[j].donGia << "\n";
+    ofstream fHDN("HoaDonNhap.txt");
+    
+    if(fHDN.is_open()){
+        fHDN << nHDN << "\n";
+        for (int i = 0; i < nHDN; i++) {
+            fHDN << dsHDN[i].maHDN << "\n";
+            fHDN << dsHDN[i].ngayNhap.ngay << " " << dsHDN[i].ngayNhap.thang << " " << dsHDN[i].ngayNhap.nam << "\n";
+            fHDN << dsHDN[i].ncc.tenNCC << "\n"; 
+            fHDN << dsHDN[i].ncc.soDienThoai << "\n";
+            fHDN << dsHDN[i].ncc.diaChi << "\n";
+            fHDN << dsHDN[i].ncc.diemChatLuong << "\n";
+            fHDN << dsHDN[i].ncc.diemUyTin << "\n";
+            
+            fHDN << dsHDN[i].soLuongMatHang << "\n";
+            for (int j = 0; j < dsHDN[i].soLuongMatHang; j++) {
+                fHDN << dsHDN[i].danhSachNhap[j].maHang << " " << dsHDN[i].danhSachNhap[j].soLuong << " " << dsHDN[i].danhSachNhap[j].donGia << "\n";
+            }
+            fHDN << dsHDN[i].tongTien << "\n";
         }
-        f << dsHDN[i].tongTien << "\n";
+    
+        fHDN.close();
     }
+    else if (!isSilent) {
+        cout << "Loi! Khong the tao/mo file hoa don nhap.\n";
+    }
+
 
     //Lưu thông tin hoá đơn xuất
-    f << nHDX << "\n";
-    for (int i = 0; i < nHDX; i++){
-        f << dsHDX[i].maHDX << "\n";
-        f << dsHDX[i].ngayXuat.ngay << " " << dsHDX[i].ngayXuat.thang << " " << dsHDX[i].ngayXuat.nam << "\n";
-        f << dsHDX[i].khachHang <<"\n";
+    ofstream fHDX("HoaDonXuat.txt");
 
-        f << dsHDX[i].soLuongMatHang << "\n";
-        for (int j = 0; j < dsHDX[i].soLuongMatHang; j++){
-            f << dsHDX[i].danhSachBan[j].maHang << " " << dsHDX[i].danhSachBan[j].soLuong << " " << dsHDX[i].danhSachBan[j].donGia << "\n";
+    if(fHDX.is_open()){
+        fHDX << nHDX << "\n";
+        for (int i = 0; i < nHDX; i++){
+            fHDX << dsHDX[i].maHDX << "\n";
+            fHDX << dsHDX[i].ngayXuat.ngay << " " << dsHDX[i].ngayXuat.thang << " " << dsHDX[i].ngayXuat.nam << "\n";
+            fHDX << dsHDX[i].khachHang <<"\n";
+
+            fHDX << dsHDX[i].soLuongMatHang << "\n";
+            for (int j = 0; j < dsHDX[i].soLuongMatHang; j++){
+                fHDX << dsHDX[i].danhSachBan[j].maHang << " " << dsHDX[i].danhSachBan[j].soLuong << " " << dsHDX[i].danhSachBan[j].donGia << "\n";
+            }
+            fHDX << dsHDX[i].tongTien << "\n";
         }
-        f << dsHDX[i].tongTien << "\n";
+
+        fHDX.close();
+    }
+    else if (!isSilent) {
+        cout << "Loi! Khong the tao/mo file hoa don xuat.\n";
     }
 
-    f.close();                  //Close the text file
-    cout << "Da ghi file thanh cong.\n";
+    if (!isSilent) {
+        cout << "Da ghi file thanh cong.\n";
+    }
 }
 
 
-void ReadData(MatHang*& kho, int& nKho, int& sucChuaKho, HoaDonNhap*& dsHDN, int& nHDN, int& sucChuaHDN, HoaDonXuat*& dsHDX, int& nHDX, int& sucChuaHDX)    {
-    ifstream f ("Kho_va_HoaDon.txt");
-    if(!f.is_open()){
-        cout << "Loi! Khong the mo file.\n";
-        return;
-    }
+void ReadData(MatHang*& kho, int& nKho, int& sucChuaKho, HoaDonNhap*& dsHDN, int& nHDN, int& sucChuaHDN, HoaDonXuat*& dsHDX, int& nHDX, int& sucChuaHDX, bool isSilent = false)    {
 
 
     // Trước khi đọc dữ liệu mới, giải phóng bộ nhớ cũ nếu đã có
@@ -754,65 +775,100 @@ void ReadData(MatHang*& kho, int& nKho, int& sucChuaKho, HoaDonNhap*& dsHDN, int
         delete[] dsHDX;
         dsHDX = nullptr;
     }
+
+    // Reset lại chỉ số phòng trường hợp file không tồn tại (Lần chạy đầu tiên)
+    nKho = 0; nHDN = 0; nHDX = 0;
+    sucChuaKho = 0; sucChuaHDN = 0; sucChuaHDX = 0;
+
+    //Đọc dữ liệu kho
+    ifstream fKho ("Kho.txt");
     
-    f >> nKho;
-    sucChuaKho = nKho + 10;
-    kho = new MatHang[sucChuaKho];  
+    if(fKho.is_open()){
+        fKho >> nKho;
+        sucChuaKho = nKho + 10;
+        kho = new MatHang[sucChuaKho];  
 
-    for(int i = 0; i < nKho; i++){
-        f >> kho[i].maHang;
-        f.ignore();
-        getline(f,kho[i].tenHang);
-        getline(f,kho[i].donViTinh);
-        f >> kho[i].giaNhap >> kho[i].giaBan >> kho[i].soLuongTon;
-        f >> kho[i].hanSuDung.ngay >> kho[i].hanSuDung.thang >> kho[i].hanSuDung.nam;
-        f >> kho[i].mucTonToiThieu;
-    }
-
-    f >> nHDN;
-    sucChuaHDN = nHDN + 10;
-    dsHDN = new HoaDonNhap[sucChuaHDN];
-
-    for(int i = 0; i < nHDN; i++){
-        f >> dsHDN[i].maHDN;
-        f >> dsHDN[i].ngayNhap.ngay >> dsHDN[i].ngayNhap.thang >> dsHDN[i].ngayNhap.nam;
-        f.ignore();
-        getline(f, dsHDN[i].ncc.tenNCC);
-        getline(f, dsHDN[i].ncc.soDienThoai);
-        getline(f, dsHDN[i].ncc.diaChi);
-        f >> dsHDN[i].ncc.diemChatLuong;
-        if (dsHDN[i].ncc.diemChatLuong < 1) dsHDN[i].ncc.diemChatLuong = 1;
-        if (dsHDN[i].ncc.diemChatLuong > 5) dsHDN[i].ncc.diemChatLuong = 5;
-        f >> dsHDN[i].ncc.diemUyTin;
-        if (dsHDN[i].ncc.diemUyTin < 1) dsHDN[i].ncc.diemUyTin = 1;
-        if (dsHDN[i].ncc.diemUyTin > 5) dsHDN[i].ncc.diemUyTin = 5;
-
-        f >> dsHDN[i].soLuongMatHang;
-        dsHDN[i].danhSachNhap = new ChiTietHoaDon[dsHDN[i].soLuongMatHang];
-        for (int j = 0; j < dsHDN[i].soLuongMatHang; j++) {
-            f >> dsHDN[i].danhSachNhap[j].maHang >> dsHDN[i].danhSachNhap[j].soLuong >> dsHDN[i].danhSachNhap[j].donGia;
+        for(int i = 0; i < nKho; i++){
+            fKho >> kho[i].maHang;
+            fKho.ignore();
+            getline(fKho,kho[i].tenHang);
+            getline(fKho,kho[i].donViTinh);
+            fKho >> kho[i].giaNhap >> kho[i].giaBan >> kho[i].soLuongTon;
+            fKho >> kho[i].hanSuDung.ngay >> kho[i].hanSuDung.thang >> kho[i].hanSuDung.nam;
+            fKho >> kho[i].mucTonToiThieu;
         }
-        f >> dsHDN[i].tongTien;
+
+        fKho.close();
+    }
+    else if (!isSilent) {
+        cout << "Loi! Khong the mo file kho.\n";
     }
 
-    f >> nHDX;
-    sucChuaHDX = nHDX + 10;
-    dsHDX = new HoaDonXuat[sucChuaHDX];
+    //Đọc dữ liệu hoá đơn nhập
+    ifstream fHDN("HoaDonNhap.txt");
 
-    for (int i = 0; i < nHDX; i++){
-        f >> dsHDX[i].maHDX;
-        f >> dsHDX[i].ngayXuat.ngay >> dsHDX[i].ngayXuat.thang >> dsHDX[i].ngayXuat.nam;
-        f.ignore();
-        getline(f, dsHDX[i].khachHang);
+    if(fHDN.is_open()){
+        fHDN >> nHDN;
+        sucChuaHDN = nHDN + 10;
+        dsHDN = new HoaDonNhap[sucChuaHDN];
 
-        f >> dsHDX[i].soLuongMatHang;
-        dsHDX[i].danhSachBan = new ChiTietHoaDon[dsHDX[i].soLuongMatHang];
-        for (int j = 0; j < dsHDX[i].soLuongMatHang; j++){
-            f >> dsHDX[i].danhSachBan[j].maHang >> dsHDX[i].danhSachBan[j].soLuong >> dsHDX[i].danhSachBan[j].donGia;
+        for(int i = 0; i < nHDN; i++){
+            fHDN >> dsHDN[i].maHDN;
+            fHDN >> dsHDN[i].ngayNhap.ngay >> dsHDN[i].ngayNhap.thang >> dsHDN[i].ngayNhap.nam;
+            fHDN.ignore();
+            getline(fHDN, dsHDN[i].ncc.tenNCC);
+            getline(fHDN, dsHDN[i].ncc.soDienThoai);
+            getline(fHDN, dsHDN[i].ncc.diaChi);
+            fHDN >> dsHDN[i].ncc.diemChatLuong;
+            if (dsHDN[i].ncc.diemChatLuong < 1) dsHDN[i].ncc.diemChatLuong = 1;
+            if (dsHDN[i].ncc.diemChatLuong > 5) dsHDN[i].ncc.diemChatLuong = 5;
+            fHDN >> dsHDN[i].ncc.diemUyTin;
+            if (dsHDN[i].ncc.diemUyTin < 1) dsHDN[i].ncc.diemUyTin = 1;
+            if (dsHDN[i].ncc.diemUyTin > 5) dsHDN[i].ncc.diemUyTin = 5;
+
+            fHDN >> dsHDN[i].soLuongMatHang;
+            dsHDN[i].danhSachNhap = new ChiTietHoaDon[dsHDN[i].soLuongMatHang];
+            for (int j = 0; j < dsHDN[i].soLuongMatHang; j++) {
+                fHDN >> dsHDN[i].danhSachNhap[j].maHang >> dsHDN[i].danhSachNhap[j].soLuong >> dsHDN[i].danhSachNhap[j].donGia;
+            }
+            fHDN >> dsHDN[i].tongTien;
         }
-        f >> dsHDX[i].tongTien;
+
+        fHDN.close();
+    }
+    else if (!isSilent) {
+        cout << "Loi! Khong the mo file hoa don nhap.\n";
     }
 
-    f.close();
+    //Đọc dữ liệu hoá đơn xuất
+    ifstream fHDX("HoaDonXuat.txt");
+
+    if(fHDX.is_open()){
+        fHDX >> nHDX;
+        sucChuaHDX = nHDX + 10;
+        dsHDX = new HoaDonXuat[sucChuaHDX];
+
+        for (int i = 0; i < nHDX; i++){
+            fHDX >> dsHDX[i].maHDX;
+            fHDX >> dsHDX[i].ngayXuat.ngay >> dsHDX[i].ngayXuat.thang >> dsHDX[i].ngayXuat.nam;
+            fHDX.ignore();
+            getline(fHDX, dsHDX[i].khachHang);
+
+            fHDX >> dsHDX[i].soLuongMatHang;
+            dsHDX[i].danhSachBan = new ChiTietHoaDon[dsHDX[i].soLuongMatHang];
+            for (int j = 0; j < dsHDX[i].soLuongMatHang; j++){
+                fHDX >> dsHDX[i].danhSachBan[j].maHang >> dsHDX[i].danhSachBan[j].soLuong >> dsHDX[i].danhSachBan[j].donGia;
+            }
+            fHDX >> dsHDX[i].tongTien;
+        }
+
+        fHDX.close();
+    }
+    else if (!isSilent) {
+        cout << "Loi! Khong the mo file hoa don xuat.\n";
+    }
+
+    if (!isSilent) {
     cout << "Da doc file thanh cong!\n";
+    }
 }
