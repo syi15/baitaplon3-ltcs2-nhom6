@@ -1,8 +1,8 @@
 #include <iostream>
 #include <string>
-#include <iomanip>
-#include <ctime>
-#include <fstream>
+#include <iomanip>      //Định dạng in ra màn hình
+#include <ctime>        //Tính toán thời gian thực
+#include <fstream>      //Đọc ghi file
 using namespace std;
 
 ////I.Struct
@@ -32,7 +32,8 @@ struct NhaCungCap {
     int diemUyTin;          // Đánh giá từ 1-5 sao, ÉP CỨNG DÙ FILE ĐÃ SAVE TRONG TXT
 };
 
-//Chi tiết hoá đơn, dùng cho cả nhập và xuất hàng, lưu thông tin về mặt hàng nào, số lượng bao nhiêu, giá cả ra sao (giá nhập cho hoá đơn nhập, giá bán cho hoá đơn xuất)
+//Chi tiết hoá đơn, dùng cho cả nhập và xuất hàng, lưu thông tin về mặt hàng nào, số lượng bao nhiêu, giá cả ra sao 
+//(giá nhập cho hoá đơn nhập, giá bán cho hoá đơn xuất)
 struct ChiTietHoaDon {
     string maHang;
     int soLuong;
@@ -295,39 +296,36 @@ void capNhatTonKho(MatHang*& kho, int& nKho, string maHang, Ngay hsd, int soLuon
     int viTri = timKiemMatHang(kho, nKho, maHang, hsd);
     if (viTri != -1){
         kho[viTri].soLuongTon += soLuongThayDoi;
-    }
+    }   
 }
 
 // Tính số ngày còn lại đến hạn sử dụng (số âm nghĩa là đã quá hạn)
 int tinhSoNgayConLai(Ngay hsd, Ngay homNay) {
     // Chuyển đổi cấu trúc Ngay thành tm (tháng: 0-11, năm: từ 1900)
-    tm time_hsd = {0};
-    time_hsd.tm_mday = hsd.ngay;
-    time_hsd.tm_mon = hsd.thang - 1;
-    time_hsd.tm_year = hsd.nam - 1900;
+    tm timeHsd = {0};
+    timeHsd.tm_mday = hsd.ngay;
+    timeHsd.tm_mon = hsd.thang - 1;
+    timeHsd.tm_year = hsd.nam - 1900;
 
-    tm time_homNay = {0};
-    time_homNay.tm_mday = homNay.ngay;
-    time_homNay.tm_mon = homNay.thang - 1;
-    time_homNay.tm_year = homNay.nam - 1900;
+    tm timeHomNay = {0};
+    timeHomNay.tm_mday = homNay.ngay;
+    timeHomNay.tm_mon = homNay.thang - 1;
+    timeHomNay.tm_year = homNay.nam - 1900;
 
     // Chuyển thành time_t (giây tính từ thước ký 1970) rồi tính không gian thời gian
-    time_t t1 = mktime(&time_hsd);
-    time_t t2 = mktime(&time_homNay);
+    time_t t1 = mktime(&timeHsd);
+    time_t t2 = mktime(&timeHomNay);
     
     return difftime(t1, t2) / (60 * 60 * 24);       //difftime tính khoảng cách giữa t1 t2 chia 60s 60m 24h để ra số ngày
 }
 
 // B. CÁC HÀM CHÍNH
 
-// Thêm sản phẩm mới vào kho, tũ động mở rộng nếu cần
+// Thêm sản phẩm mới vào kho, tự động mở rộng nếu cần
 void themMatHang(MatHang*& kho, int& nKho, int& sucChua, string newMaHang, Ngay newHsd){
-    // Mở rộng dung lượng nếu đầy (thế tăng 2x+1 giảm lượng cấp phát)
+    // Mở rộng dung lượng nếu đầy
     if (nKho >= sucChua){
         int newSucChua = sucChua * 2 + 1;           
-        //Tóm gọn thuật toán như sau: * 2 để giảm lượng làm việc của máy, do mỗi lần tạo và xoá array sau mỗi lần đầy kho rất tốn cpu,
-        //+1 để đảm bảo trường hợp succhua = 0 (0 * 2 + 1 = 0)
-
         MatHang* temp = new MatHang[newSucChua];
         for (int i = 0; i < nKho; i++) temp[i] = kho[i];
         delete[] kho;
@@ -335,18 +333,54 @@ void themMatHang(MatHang*& kho, int& nKho, int& sucChua, string newMaHang, Ngay 
         sucChua = newSucChua;
     }
 
-    // Nhập thông tin sản phẩm
     kho[nKho].maHang = newMaHang;
-    cout << "-Nhap ten mat hang: ";
-    cin.ignore(); getline(cin, kho[nKho].tenHang);
-    cout << "-Nhap don vi tinh mat hang: ";
-    getline(cin, kho[nKho].donViTinh);
-    cout << "-Nhap gia nhap mat hang: "; cin >> kho[nKho].giaNhap;
-    cout << "-Nhap gia ban mat hang: "; cin >> kho[nKho].giaBan;
     kho[nKho].hanSuDung = newHsd;
-    cout << "-Nhap muc ton toi thieu: "; cin >> kho[nKho].mucTonToiThieu;
 
+    //Khởi tạo số lượng tồn bằng 0, nếu sau này có nhập hàng thì sẽ cập nhật sau
     kho[nKho].soLuongTon = 0;
+
+    // Kiểm tra nếu mã hàng tồn tại trong kho
+    int viTriCu = -1;
+    for (int i = 0; i < nKho; i++) {
+        if (kho[i].maHang == newMaHang) {
+            viTriCu = i;
+            break; 
+        }
+    }
+
+    if (viTriCu != -1) {
+        // Nếu đã có trong kho sẽ lấy thông tin cũ
+        cout << ">> He thong nhan dien ma hang [" << newMaHang << "] da ton tai.\n";
+        cout << ">> Tu dong dong bo thong tin san pham: " << kho[viTriCu].tenHang << "\n";
+        kho[nKho].tenHang = kho[viTriCu].tenHang;
+        kho[nKho].donViTinh = kho[viTriCu].donViTinh;
+        kho[nKho].giaNhap = kho[viTriCu].giaNhap;
+        kho[nKho].giaBan = kho[viTriCu].giaBan;
+        kho[nKho].mucTonToiThieu = kho[viTriCu].mucTonToiThieu;
+    } 
+    else {
+        //Nhập thông tin sản phẩm
+        cout << "Hang moi! Tien hanh them vao danh muc kho...\n";
+        cout << "-Nhap ten mat hang: ";
+        cin.ignore(); getline(cin, kho[nKho].tenHang);
+        cout << "-Nhap don vi tinh mat hang: ";
+        getline(cin, kho[nKho].donViTinh);
+        
+        do {
+            cout << "-Nhap gia nhap mat hang: "; cin >> kho[nKho].giaNhap;
+            if (kho[nKho].giaNhap < 0) cout << "Gia nhap khong duoc am! Vui long nhap lai.\n";
+        } while (kho[nKho].giaNhap < 0);
+
+        do {
+            cout << "-Nhap gia ban mat hang: "; cin >> kho[nKho].giaBan;
+            if (kho[nKho].giaBan < 0) cout << "Gia ban khong duoc am! Vui long nhap lai.\n";
+        } while (kho[nKho].giaBan < 0);
+
+        do {
+            cout << "-Nhap muc ton toi thieu: "; cin >> kho[nKho].mucTonToiThieu;
+            if (kho[nKho].mucTonToiThieu < 0) cout << "Muc ton khong duoc am! Vui long nhap lai.\n";
+        } while (kho[nKho].mucTonToiThieu < 0);
+    }
 
     nKho++;
 }
@@ -390,7 +424,10 @@ void xuLyNhapHang(MatHang*& kho, int& nKho, int& sucChuaKho, HoaDonNhap*& dsHDN,
     chuanHoaNgay(hdn.ngayNhap);
 
     // Bước 2: Nhập chi tiết các hẳng hàng trong hoá đơn
-    cout << "Nhap so luong mat hang can nhap: "; cin >> hdn.soLuongMatHang;
+    do{
+        cout << "Nhap so luong mat hang can nhap: "; cin >> hdn.soLuongMatHang;
+        if (hdn.soLuongMatHang <= 0) cout << "So luong mat hang phai lon hon 0! Vui long nhap lai.\n";
+    } while (hdn.soLuongMatHang <= 0);
 
     // Tạo mảng động cho cấc hàng trong hoá đơn:
     hdn.danhSachNhap = new ChiTietHoaDon[hdn.soLuongMatHang];
@@ -400,8 +437,13 @@ void xuLyNhapHang(MatHang*& kho, int& nKho, int& sucChuaKho, HoaDonNhap*& dsHDN,
         string maTemp;
         Ngay hsdTemp;
         cout << "\nNhap ma hang thu " << i + 1 << ": "; cin >> maTemp;
-        cout << "Nhap han su dung (ngay -> thang -> nam): "; cin >> hsdTemp.ngay >> hsdTemp.thang >> hsdTemp.nam;
-        chuanHoaNgay(hsdTemp);
+        do{
+            cout << "Nhap han su dung (ngay -> thang -> nam): "; cin >> hsdTemp.ngay >> hsdTemp.thang >> hsdTemp.nam;
+            chuanHoaNgay(hsdTemp);
+            if (tinhSoNgayConLai(hsdTemp, hdn.ngayNhap) < 0) {
+                cout << "Loi: Han su dung da qua moc ngay nhap kho! Khong the nhap hang het han. Vui long nhap lai.\n";
+            }
+        }while(tinhSoNgayConLai(hsdTemp, hdn.ngayNhap) < 0);
 
         // Check xem id có trong kho chưa
         int viTri = timKiemMatHang(kho, nKho, maTemp, hsdTemp); 
@@ -420,8 +462,6 @@ void xuLyNhapHang(MatHang*& kho, int& nKho, int& sucChuaKho, HoaDonNhap*& dsHDN,
             hdn.danhSachNhap[i] = {maTemp, sl, kho[viTri].giaNhap};
         } 
         else {                                          // Case hàng mới
-            cout << "Hang moi! Tien hanh them vao danh muc kho...\n";
-            
             // Đăng ký sản phẩm mới (nKho sẽ tăng bên trong themMatHang)
             themMatHang(kho, nKho, sucChuaKho, maTemp, hsdTemp);
  
@@ -503,7 +543,7 @@ void xuLyXuatHang(MatHang*& kho, int& nKho, int& sucChuaKho, HoaDonXuat*& dsHDX,
     chuanHoaNgay(hdx.ngayXuat);
 
     // Bước 2: Chọn sản phẩm bán
-    cout << "Chon so luong mat hang muon mua: "; cin >> hdx.soLuongMatHang;
+    cout << "Chon so luong loai hang muon mua: "; cin >> hdx.soLuongMatHang;
 
     // Cấp phát mảng động cho chi tiết hàng trong hoá đơn:
     hdx.danhSachBan = new ChiTietHoaDon[hdx.soLuongMatHang];
@@ -520,7 +560,10 @@ void xuLyXuatHang(MatHang*& kho, int& nKho, int& sucChuaKho, HoaDonXuat*& dsHDX,
     for (int i = 0; i < hdx.soLuongMatHang; i++){
         int soLoaiHang = 0;
         for (int k = 0; k < nKho; k++) {
-            if (kho[k].soLuongTon <= 0) continue; 
+            if (kho[k].soLuongTon <= 0) continue;
+
+            //Bỏ qua không gộp các lô hàng đã hết hạn
+            if (tinhSoNgayConLai(kho[k].hanSuDung, hdx.ngayXuat) < 0) continue;
             
             bool found = false;
             for (int j = 0; j < soLoaiHang; j++) {
@@ -560,13 +603,13 @@ void xuLyXuatHang(MatHang*& kho, int& nKho, int& sucChuaKho, HoaDonXuat*& dsHDX,
         
         int soLoThucTe = 0;
         for (int j = 0; j < nKho; j++) {
-            if (kho[j].maHang == maCanTim && kho[j].soLuongTon > 0) soLoThucTe++;
+            if (kho[j].maHang == maCanTim && kho[j].soLuongTon > 0 && tinhSoNgayConLai(kho[j].hanSuDung, hdx.ngayXuat) >= 0) soLoThucTe++;
         }
 
         int* dsViTriDong = new int[soLoThucTe]; 
         int chiSo = 0;
         for (int j = 0; j < nKho; j++) {
-            if (kho[j].maHang == maCanTim && kho[j].soLuongTon > 0) dsViTriDong[chiSo++] = j;
+            if (kho[j].maHang == maCanTim && kho[j].soLuongTon > 0 && tinhSoNgayConLai(kho[j].hanSuDung, hdx.ngayXuat) >= 0) dsViTriDong[chiSo++] = j;
         }
 
         cout << "\nTim thay " << soLoThucTe << " lo hang cho san pham [" << dsGop[chonMon-1].tenHang << "]. Chon STT lo:\n";
